@@ -63,6 +63,8 @@ const ProductList: React.FC = () => {
             alert('Failed to create order!')
         }
     }, [items]);
+
+    // throw new Error('something happened')
     return (<div className='products'>
         <h2>Products</h2>
         <div style={{ display: 'flex' }}>

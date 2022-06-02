@@ -1,4 +1,5 @@
 import express from 'express';
+import MetricService from './utils/MetricService';
 
 const router = express.Router();
 
@@ -28,13 +29,25 @@ const booking = (request: { items: any[], city?: string }) => new Promise((r, rj
 const payment = (request: any) => new Promise(r => setTimeout(r, 1000))
 
 router.post('/orders', async (req, res) => {
+    const transcation = MetricService.client.startTransaction('order-create');
+    transcation?.setLabel('city', req.body.city);
+
     try {
+        const bookingSpan = transcation?.startSpan('booking');
         await booking(req.body);
+        bookingSpan?.end();
+
+        const paymentSpan = transcation?.startSpan('payment');
         await payment(req.body);
+        paymentSpan?.end();
+
         res.status(201).send("ok");
+        transcation?.setOutcome('success');
     } catch (e) {
         res.status(500).send(e);
+        transcation?.setOutcome('failure');
     } finally {
+        transcation?.end();
     }
 
 })
